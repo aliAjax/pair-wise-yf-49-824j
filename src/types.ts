@@ -12,6 +12,14 @@ export interface Evidence {
   sensitive: boolean;
   status: EvidenceStatus;
   note: string;
+  /** 排序序号，用于离线时记录顺序调整 */
+  order: number;
+  /** 最后修改时间戳；缺失表示旧版本数据，需标待确认 */
+  updatedAt?: string;
+  /** 单调版本号；旧数据可能缺失 */
+  version?: number;
+  /** 旧数据标记：待人工确认，不补号不覆盖 */
+  pendingReview?: boolean;
 }
 
 export interface Objection {
@@ -37,3 +45,24 @@ export interface SessionState {
   timerSeconds: number;
   operatorMode: "庭审控制" | "公开屏预览";
 }
+
+/** 本地暂存队列中的一条修改记录 */
+export interface LocalChange {
+  id: string;
+  evidenceId: string;
+  changedAt: string;
+  changes: Partial<Evidence>;
+  /** 该修改所基于的版本时间戳，用于检测服务器是否也改了同一项 */
+  baseUpdatedAt: string;
+}
+
+/** 双方修改冲突记录：保留两个版本待人工确认 */
+export interface ConflictRecord {
+  id: string;
+  evidenceId: string;
+  localVersion: Evidence;
+  serverVersion: Evidence;
+  detectedAt: string;
+}
+
+export type SyncStatus = "idle" | "syncing" | "offline" | "conflict" | "error";
